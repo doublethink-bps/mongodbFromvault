@@ -1,0 +1,40 @@
+version: '3'
+services:
+  db:
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/mongo:/data
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "root-password"
+    command: ["mongod", "--bind_ip",0.0.0.0]
+    container_name: "mongo"
+    networks:
+      backend:
+  
+  vault:
+    image: vault:1.13.3
+    container_name: vault
+    ports:
+      - 8201:8201
+    environment:
+      - VAULT_ADDR=https://vault:8201
+    volumes:
+      - ./data/vault-volume:/data
+    cap_add:
+      - IPC_LOCK
+    #command: ./bin/vault server -config=/data/vault-base_tmp.hcl
+    command: sh -c "apk add bash && bash /data/vault_setup.sh"
+    tty: true
+    networks:
+      backend:
+
+networks:
+  backend:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.200.0/24
